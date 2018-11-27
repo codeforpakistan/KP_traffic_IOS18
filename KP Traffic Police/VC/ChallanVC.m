@@ -7,6 +7,7 @@
 //
 
 #import "ChallanVC.h"
+@import Firebase;
 
 @interface ChallanVC ()
 
@@ -19,6 +20,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.title = @"Challan Detail";
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    
     _tableView.delegate = self;
     _tableView.dataSource = self;
     
@@ -26,6 +30,13 @@
     NSLog(@"%@", dic);
     
     _tableView.tableFooterView = [[UIView alloc] initWithFrame:CGRectZero];
+    
+    //analytic
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 5],
+                                     kFIRParameterItemName:@"Challan Status Checked"
+                                     }];
 }
 
 
@@ -46,11 +57,11 @@
         lbl2.text = [dic objectForKey:@"date"];
     }
     else if (indexPath.row == 1){
-        lbl1.text = @"Distract";
+        lbl1.text = @"District";
         lbl2.text = [dic objectForKey:@"district"];
     }
     else if (indexPath.row == 2){
-        lbl1.text = @"ToName";
+        lbl1.text = @"To Name";
         lbl2.text = [dic objectForKey:@"name"];
     }
     else if (indexPath.row == 3){

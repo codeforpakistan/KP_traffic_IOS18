@@ -16,7 +16,15 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+        
+    //for (UIButton *btn in _btns) {
+      //  btn.layer.shadowColor = [UIColor grayColor].CGColor;
+       // btn.layer.shadowOffset = CGSizeMake(1.0, 1.0);
+        //btn.layer.shadowOpacity = 1;
+        //btn.layer.shadowRadius = 1.0;
+    //}
     
+    self.title = @"E-Test";
 }
 
 - (IBAction)backBtn:(id)sender {

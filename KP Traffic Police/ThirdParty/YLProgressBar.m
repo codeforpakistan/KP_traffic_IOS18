@@ -108,8 +108,10 @@ const CGFloat YLProgressBarDefaultProgress = 0.3f;
 - (void)layoutSubviews {
   [super layoutSubviews];
 
-  CGFloat height           = CGRectGetHeight(self.bounds) - CGRectGetHeight(self.bounds) / 3;
-  _indicatorTextLabel.font = [UIFont fontWithName:YLProgressBarDefaultName size: height];
+ // CGFloat height           = CGRectGetHeight(self.bounds) - CGRectGetHeight(self.bounds) / 3;
+  _indicatorTextLabel.font = [UIFont fontWithName:YLProgressBarDefaultName size: 15];
+_indicatorTextLabel.textColor = [UIColor whiteColor];
+
 }
 
 - (void)drawRect:(CGRect)rect
@@ -125,12 +127,7 @@ const CGFloat YLProgressBarDefaultProgress = 0.3f;
   self.internalCornerRadius = 0;
 
   if (_type == YLProgressBarTypeRounded) {
-    if (_cornerRadius > 0) {
-      self.internalCornerRadius = _cornerRadius;
-    }
-    else {
-      self.internalCornerRadius = rect.size.height / 2;
-    }
+   
   }
 
   // Compute the progressOffset for the stripe's animation

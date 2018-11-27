@@ -11,6 +11,7 @@
 
 @interface ComplaintsVC : UIViewController<UIImagePickerControllerDelegate, UINavigationControllerDelegate, CLLocationManagerDelegate>
 
+@property (strong, nonatomic) IBOutlet UIButton *complaintBtn;
 @property (strong, nonatomic) IBOutlet UITextField *descriptionTF;
 @property (strong, nonatomic) IBOutlet UIButton *vidBtn;
 @property (strong, nonatomic) IBOutlet UIImageView *imgView;
@@ -19,4 +20,7 @@
 @property (strong, nonatomic) IBOutlet UIImageView *vidImgView;
 @property (strong, nonatomic) IBOutlet UILabel *label1;
 @property (strong, nonatomic) IBOutlet UILabel *label2;
+@property (strong, nonatomic) IBOutlet UIButton *district_btn;
+@property (strong, nonatomic) IBOutlet UIBarButtonItem *backBtn;
+@property (strong, nonatomic) IBOutlet UIButton *sendBtn;
 @end

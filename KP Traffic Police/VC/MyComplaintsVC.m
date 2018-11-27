@@ -9,6 +9,10 @@
 #import "MyComplaintsVC.h"
 #import "SWRevealViewController.h"
 #import "SCLAlertView.h"
+@import Firebase;
+#import "Reachability.h"
+#import <MediaPlayer/MediaPlayer.h>
+#import <MobileCoreServices/MobileCoreServices.h>
 
 @interface MyComplaintsVC ()
 
@@ -22,6 +26,9 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.title = @"My Complaints";
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    
     _tableView.delegate = self;
     _tableView.dataSource = self;
     
@@ -33,10 +40,25 @@
         [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
     }
     
-    alert1 = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
-    alert1.showAnimationType = SCLAlertViewShowAnimationFadeIn;
-    [alert1 showWaiting:@"" subTitle:@"Wait a while...." closeButtonTitle:nil duration:0.0];
-    [self performSelector:@selector(myComplaints) withObject:self afterDelay:1];
+    Reachability *access = [Reachability reachabilityWithHostname:@"www.google.com"];
+    NetworkStatus status = [access currentReachabilityStatus];
+    if (!status) {
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        [alert showWarning:self title:@"No internet connection." subTitle:@"Please check your internet connection and try again." closeButtonTitle:@"OK" duration:0.0f];
+    }
+    else{
+        alert1 = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        alert1.showAnimationType = SCLAlertViewShowAnimationFadeIn;
+        [alert1 showWaiting:@"" subTitle:@"Wait a while...." closeButtonTitle:nil duration:0.0];
+        [self performSelector:@selector(myComplaints) withObject:self afterDelay:1];
+    }
+    
+    //analytic
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 3],
+                                     kFIRParameterItemName:@"My Complaint List"
+                                     }];
 }
 
 -(void)myComplaints{
@@ -76,14 +98,16 @@
             [alert1 hideView];
             if ([message isEqualToString:@"Success!"]) {
                 data = [json objectForKey:@"data"];
+                NSLog(@"%@", data);
                 [[NSUserDefaults standardUserDefaults] setObject:data forKey:@"complaint_detail"];
                 [_tableView reloadData];
                 _tableView.hidden = NO;
+                _complaint_label.hidden = YES;
             }
             else if ([message isEqualToString:@"message"]){
                 _tableView.hidden = YES;
+                _complaint_label.hidden = NO;
             }
-            
         }
     }
 }
@@ -100,10 +124,8 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"cell_identifier"];
 
     UIView *_bgView = (UIView*)[cell viewWithTag:10];
-    _bgView.layer.shadowColor = [UIColor darkGrayColor].CGColor;
-    _bgView.layer.shadowOffset = CGSizeMake(1.0, 1.0);
-    _bgView.layer.shadowOpacity = 1;
-    _bgView.layer.shadowRadius = 1.0;
+    _bgView.layer.borderWidth = 1.0f;
+    _bgView.layer.borderColor = [UIColor grayColor].CGColor;
     
     UILabel *label1 = (UILabel*)[cell viewWithTag:1];
     UILabel *label2 = (UILabel*)[cell viewWithTag:2];
@@ -111,10 +133,10 @@
     UILabel *label4 = (UILabel*)[cell viewWithTag:4];
     
     /////
-    NSString *complaint_id = [[data objectAtIndex:indexPath.row] objectForKey:@"complaint_id"];
-    label2.text = [@"Complaint ID: " stringByAppendingString:complaint_id];
+    NSString *complaint_type = [[data objectAtIndex:indexPath.row] objectForKey:@"complaint_type"];
+    label2.text = complaint_type;
     label3.text = [[data objectAtIndex:indexPath.row] objectForKey:@"description"];
-    label4.text = [[data objectAtIndex:indexPath.row] objectForKey:@"status"];
+    label4.text = [NSString stringWithFormat:@"Status: %@", [[data objectAtIndex:indexPath.row] objectForKey:@"status"]];
     
     //date
     NSString *dateString = [[data objectAtIndex:indexPath.row] objectForKey:@"dated"];
@@ -130,6 +152,19 @@
     label1.text = dateString1;
     
     return cell;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    Reachability *access = [Reachability reachabilityWithHostname:@"www.google.com"];
+    NetworkStatus status = [access currentReachabilityStatus];
+    if (!status) {
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        [alert showWarning:self title:@"No internet connection." subTitle:@"Please check your internet connection and try again." closeButtonTitle:@"OK" duration:0.0f];
+    }
+    else{
+        [[NSUserDefaults standardUserDefaults] setObject:[data objectAtIndex:indexPath.row] forKey:@"complaintt_detail"];
+    }
 }
 
 @end

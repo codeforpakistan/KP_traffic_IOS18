@@ -15,4 +15,7 @@
 @property (strong, nonatomic) IBOutlet UIImageView *imageView;
 
 @property (strong, nonatomic) UIImageView *imgView;
+@property (strong, nonatomic) IBOutlet UITableView *tableView1;
+@property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
+@property (strong, nonatomic) IBOutlet UILabel *response_lbl;
 @end

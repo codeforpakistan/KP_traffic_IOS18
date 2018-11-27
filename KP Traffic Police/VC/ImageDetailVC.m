@@ -8,6 +8,7 @@
 
 #import "ImageDetailVC.h"
 #import <SDWebImage/UIImageView+WebCache.h>
+@import Firebase;
 
 @interface ImageDetailVC ()
 
@@ -19,6 +20,12 @@
     [super viewDidLoad];
 
     [self performSelector:@selector(ftn) withObject:self afterDelay:0.5];
+    
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 7],
+                                     kFIRParameterItemName:@"Traffic Education Detail"
+                                     }];
 }
 
 -(void)ftn{

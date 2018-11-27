@@ -9,13 +9,15 @@
 #import "AppDelegate.h"
 #import "LoginVC.h"
 #import "SWRevealViewController.h"
+#import <Fabric/Fabric.h>
+#import <Crashlytics/Crashlytics.h>
+@import Firebase;
 
 @interface AppDelegate ()
 
 @end
 
 @implementation AppDelegate
-
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
@@ -24,8 +26,8 @@
     
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
 
-    self.window.rootViewController = [storyboard instantiateInitialViewController];
-    [self.window makeKeyAndVisible];
+//    self.window.rootViewController = [storyboard instantiateInitialViewController];
+//    [self.window makeKeyAndVisible];
     
     BOOL check = [[NSUserDefaults standardUserDefaults] boolForKey:@"login_status"];
     UINavigationController *navController = (UINavigationController *)self.window.rootViewController;
@@ -39,6 +41,19 @@
         _window.rootViewController = rootController;
         [self.window makeKeyAndVisible];
     }
+    
+//    [[UINavigationBar appearance] setBackgroundImage:[UIImage imageNamed:@"top_bar1"] forBarMetrics:UIBarMetricsDefault];
+
+    
+    [Fabric with:@[[Crashlytics class]]];
+    [FIRApp configure];
+    
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 1],
+                                     kFIRParameterItemName:@"SplashScreen"
+                                     }];
+    
     return YES;
 }
 

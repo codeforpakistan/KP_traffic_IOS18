@@ -10,4 +10,5 @@
 
 @interface DemoTestVC : UIViewController
 
+@property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *btns;
 @end

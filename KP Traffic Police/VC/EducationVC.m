@@ -9,6 +9,7 @@
 #import "EducationVC.h"
 #import <SDWebImage/UIImageView+WebCache.h>
 #import "SCLAlertView.h"
+@import Firebase;
 
 @interface EducationVC ()<UICollectionViewDelegate, UICollectionViewDataSource, UISearchBarDelegate>
 
@@ -24,6 +25,10 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.title = @"Traffic Education";
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    
     _collectioView.delegate = self;
     _collectioView.dataSource = self;
     
@@ -33,6 +38,14 @@
     success_alert.showAnimationType = SCLAlertViewShowAnimationFadeIn;
     [success_alert showWaiting:@"" subTitle:@"Loading Data" closeButtonTitle:nil duration:0.0];
     [self performSelector:@selector(traffic_education_data) withObject:self afterDelay:1];
+    
+    
+    //analytic
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 6],
+                                     kFIRParameterItemName:@"Traffic_Education_List"
+                                     }];
 }
 
 -(void)viewDidAppear:(BOOL)animated{
@@ -63,6 +76,15 @@
             NSLog(@"%lu", (unsigned long)data.count);
         }
     }
+}
+
+- (BOOL)searchBar:(UISearchBar *)searchBar shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+{
+    if([text isEqualToString:@"\n"])
+    {
+        [searchBar resignFirstResponder];
+    }
+    return YES;
 }
 
 -(void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText{
@@ -147,6 +169,9 @@
     [self performSegueWithIdentifier:@"imagedetail_segue" sender:self];
 }
 
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+    return CGSizeMake((_collectioView.frame.size.width-50)/2, (_collectioView.frame.size.width-30)/2);
+}
 
 - (IBAction)backBtn:(id)sender {
     [self.navigationController popViewControllerAnimated:YES];
