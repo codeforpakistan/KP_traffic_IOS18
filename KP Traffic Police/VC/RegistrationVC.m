@@ -10,6 +10,7 @@
 #import "SCLAlertView.h"
 #import "LoginVC.h"
 #import "UIView+Toast.h"
+#import "SWRevealViewController.h"
 
 @interface RegistrationVC ()
 
@@ -126,6 +127,7 @@
         [alert showSuccess:self title:@"Success" subTitle:@"You have been registered." closeButtonTitle:@"Ok" duration:0.0f];
         [alert alertIsDismissed:^{
             LoginVC *vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginVC"];
+            [self.revealViewController pushFrontViewController:vc animated:YES];
             [self.navigationController pushViewController:vc animated:NO];
         }];
     }
@@ -133,9 +135,12 @@
         [alert1 hideView];
 
         SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
-        
         [alert showWarning:self title:@"Oops" subTitle:@"CNIC already exist." closeButtonTitle:@"Ok" duration:0.0f]; // Warning
         _NIC_TF.text = @"";
     }
 }
+- (IBAction)backBtn:(id)sender {
+    LoginVC *vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginVC"];
+    [self.revealViewController pushFrontViewController:vc animated:YES];
+    [self.navigationController pushViewController:vc animated:NO];}
 @end

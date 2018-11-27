@@ -11,6 +11,7 @@
 #import "SCLAlertView.h"
 #import "UIView+Toast.h"
 #import "SWRevealViewController.h"
+#import "Reachability.h"
 
 @interface LoginVC ()
 
@@ -23,7 +24,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    _nic_tf.text = @"1530345259219";
+    //_nic_tf.text = @"1530345259219";
     
     self.navigationController.navigationBar.hidden = YES;
     
@@ -49,15 +50,23 @@
 }
 
 - (IBAction)user_login:(id)sender {
-
-    if (_nic_tf.text.length < 13) {
-        [self.view makeToast:@"Fill all fields" duration:2 position:CSToastPositionCenter];
+    
+    Reachability *access = [Reachability reachabilityWithHostname:@"www.google.com"];
+    NetworkStatus status = [access currentReachabilityStatus];
+    if (status) {
+        if (_nic_tf.text.length < 13) {
+            [self.view makeToast:@"Fill all fields" duration:2 position:CSToastPositionCenter];
+        }
+        else{
+            alert1 = [[SCLAlertView alloc] initWithNewWindowWidth:250];
+            alert1.showAnimationType = SCLAlertViewShowAnimationFadeIn;
+            [alert1 showWaiting:@"" subTitle:@"Getting Login" closeButtonTitle:nil duration:0.0];
+            [self performSelector:@selector(login) withObject:self afterDelay:1];
+        }
     }
     else{
-        alert1 = [[SCLAlertView alloc] initWithNewWindowWidth:250];
-        alert1.showAnimationType = SCLAlertViewShowAnimationFadeIn;
-        [alert1 showWaiting:@"" subTitle:@"Getting Login" closeButtonTitle:nil duration:0.0];
-        [self performSelector:@selector(login) withObject:self afterDelay:1];
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        [alert showWarning:self title:@"No internet connection." subTitle:@"Please check your internet connection and try again." closeButtonTitle:@"OK" duration:0.0f];
     }
 }
 
@@ -80,8 +89,8 @@
         [alert1 hideView];
         [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"login_status"];
         [[NSUserDefaults standardUserDefaults] setObject:[json objectForKey:@"data"] forKey:@"user_data"];
-        
         SWRevealViewController *vc = [self.storyboard instantiateViewControllerWithIdentifier:@"SWRevealViewController"];
+        [self.revealViewController pushFrontViewController:vc animated:YES];
         [self.navigationController pushViewController:vc animated:YES];
     }
     else if ([message isEqualToString:@"Invalid name or password"]){
@@ -95,6 +104,7 @@
 
 - (IBAction)registerBtn:(id)sender {
     RegistrationVC *vc = [self.storyboard instantiateViewControllerWithIdentifier:@"RegistrationVC"];
+    [self.revealViewController pushFrontViewController:vc animated:YES];
     [self.navigationController pushViewController:vc animated:NO];
 }
 @end

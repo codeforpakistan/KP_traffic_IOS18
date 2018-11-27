@@ -22,7 +22,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.title = @"Road";
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+    
     road_arr = @[@"G.T Road", @"Khyber Road", @"Charsada Road", @"Jail Road", @"University Road", @"Dalazak Road", @"Saddad Road", @"Bagh e Naran Road", @"Warsak Road", @"Kohat Road"];
+    
     address_arr = @[@"Pir Zakuri - suri pul", @"Suri pul - Aman Chowk", @"Ring Road - Bacha Khan Chowk", @"Khyber Bazar - FC Chowk", @"Sifat Ghayour - Phase 3", @"Hashtnaghri flyover", @"Suri pul - Cantt Area", @"Phase-3 Chowk - Baghi e Naran Chowk", @"Maichani Chungi - ICMS College", @"Ramdas Chowk - Kohat Adda"];
     
     flag = @[@"gt_road", @"khyber_road", @"charsadda_road", @"jail_road", @"university_road", @"dalazak_road", @"saddar_road", @"baghenaran_road", @"warsak_road", @"kohat_road"];
@@ -49,6 +53,8 @@
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
     index = indexPath.row;
     
+    [[NSUserDefaults standardUserDefaults] setObject:[road_arr objectAtIndex:indexPath.row] forKey:@"road_name"];
+    
     alert = [[SCLAlertView alloc] initWithNewWindowWidth:250];
     alert.showAnimationType = SCLAlertViewShowAnimationFadeIn;
     [alert showWaiting:@"" subTitle:@"Wait a while" closeButtonTitle:nil duration:0.0];
@@ -72,6 +78,7 @@
                               JSONObjectWithData:UrlData
                               options:NSJSONReadingMutableContainers|NSJSONReadingMutableLeaves
                               error:&error];
+        NSLog(@"%@", json);
         NSString *message = [json objectForKey:@"message"];
         if ([message isEqualToString:@"Route status updated!"]) {
             NSArray *data = [json objectForKey:@"data"];

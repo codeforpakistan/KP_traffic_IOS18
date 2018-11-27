@@ -9,9 +9,12 @@
 #import "HomeVC.h"
 #import "SWRevealViewController.h"
 #import "SCLAlertView.h"
+@import Firebase;
+#import "Reachability.h"
 
 @interface HomeVC ()
 @property (strong, nonatomic) IBOutlet UIBarButtonItem *menuBtn;
+@property (strong, nonatomic) IBOutlet UILabel *label;
 
 @end
 
@@ -23,6 +26,14 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    NSArray *user_data = [[NSUserDefaults standardUserDefaults] objectForKey:@"user_data"];
+    NSString *name = [NSString stringWithFormat:@"Welcome, %@", [[user_data objectAtIndex:0] objectForKey:@"name"]];
+    _label.text = name;
+    
+    self.title = @"Our Services";
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
+
+    
     //self.navigationController.navigationBar.hidden = YES;
     SWRevealViewController *revealViewController = self.revealViewController;
     if ( revealViewController )
@@ -33,6 +44,15 @@
     }
     
     textField.delegate = self;
+    
+    
+    //analytic
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 2],
+                                     kFIRParameterItemName:@"Main(Home) Screen"
+                                     }];
+    
 }
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
@@ -46,23 +66,44 @@
     return newLength <= 13;
 }
 
-
 - (IBAction)license_verification:(id)sender {
-    SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
     
-    textField = [alert addTextField:@""];
+    //[[Crashlytics sharedInstance] crash];
     
-    [alert addButton:@"Submit" actionBlock:^(void) {
-        if (textField.text.length == 13) {
-            
-            success_alert = [[SCLAlertView alloc] initWithNewWindowWidth:250];
-            success_alert.showAnimationType = SCLAlertViewShowAnimationFadeIn;
-            [success_alert showWaiting:@"" subTitle:@"Processing..." closeButtonTitle:nil duration:0.0];
-            [self performSelector:@selector(verification) withObject:self afterDelay:1];
-        }
-    }];
-    
-    [alert showEdit:self title:@"License Verification" subTitle:@"Enter CNIC without dishes(-)" closeButtonTitle:nil duration:0.0f];
+    Reachability *access = [Reachability reachabilityWithHostname:@"www.google.com"];
+    NetworkStatus status = [access currentReachabilityStatus];
+    if (!status) {
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        [alert showWarning:self title:@"No internet connection." subTitle:@"Please check your internet connection and try again." closeButtonTitle:@"OK" duration:0.0f];
+    }
+    else{
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        
+        textField = [alert addTextField:@""];
+        textField.keyboardType = UIKeyboardTypeNumberPad;
+        
+        [alert addButton:@"Submit" actionBlock:^(void) {
+            if (textField.text.length == 13) {
+                
+                success_alert = [[SCLAlertView alloc] initWithNewWindowWidth:250];
+                success_alert.showAnimationType = SCLAlertViewShowAnimationFadeIn;
+                [success_alert showWaiting:@"" subTitle:@"Processing..." closeButtonTitle:nil duration:0.0];
+                [self performSelector:@selector(verification) withObject:self afterDelay:1];
+            }
+            else{
+                SCLAlertView *erralert = [[SCLAlertView alloc] initWithNewWindowWidth:250];
+                [erralert showError:@"Error!" subTitle:@"Invalid CNIC" closeButtonTitle:@"OK" duration:0.0f]; // Error
+            }
+        }];
+        
+        
+        SCLButton *button =[alert addButton:@"Cancel" actionBlock:^{
+            //
+        }];
+        
+        
+        [alert showEdit:self title:@"License Verification" subTitle:@"Enter CNIC without dishes(-)" closeButtonTitle:nil duration:0.0f];
+    }
 }
 
 -(void)verification{
@@ -81,13 +122,15 @@
                                                              error:&err];
     NSDictionary* json = [NSJSONSerialization JSONObjectWithData:responseData options:kNilOptions error:&err];
     NSLog(@"%@", json);
-    NSString *error = [json objectForKey:@"error"] ;
+    NSString *error1 = [NSString stringWithFormat:@"%@", [json objectForKey:@"error"]];
+    NSLog(@"%@", error1);
     
-    if (error == 0) {
+    
+    if ([error1 isEqualToString:@"No record found."]) {
         [success_alert hideView];
         SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
         
-        [alert showError:self title:@"Oops" subTitle:@"Invalid CNIC!" closeButtonTitle:@"Ok" duration:0.0f];
+        [alert showError:self title:@"Oops" subTitle:@"No record found." closeButtonTitle:@"Ok" duration:0.0f];
     }
     else{
         [success_alert hideView];
@@ -97,22 +140,38 @@
 }
 
 - (IBAction)Challan_tracking:(id)sender {
-    SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
     
-    textField1 = [alert addTextField:@""];
-    
-    [alert addButton:@"Search" actionBlock:^(void) {
+    Reachability *access = [Reachability reachabilityWithHostname:@"www.google.com"];
+    NetworkStatus status = [access currentReachabilityStatus];
+    if (!status) {
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        [alert showWarning:self title:@"No internet connection." subTitle:@"Please check your internet connection and try again." closeButtonTitle:@"OK" duration:0.0f];
+    }
+    else{
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        
+        textField1 = [alert addTextField:@""];
+        textField1.keyboardType = UIKeyboardTypeNumberPad;
+        [alert addButton:@"Search" actionBlock:^(void) {
             
-        success_alert1 = [[SCLAlertView alloc] initWithNewWindowWidth:250];
-        success_alert1.showAnimationType = SCLAlertViewShowAnimationFadeIn;
-        [success_alert1 showWaiting:@"" subTitle:@"Verifying Challan ID" closeButtonTitle:nil duration:0.0];
-        [self performSelector:@selector(challan_tracking) withObject:self afterDelay:1];
-    }];
-    
-    [alert showEdit:self title:@"Challan Tracking" subTitle:@"Enter ID" closeButtonTitle:nil duration:0.0f];
+            if (![textField1.text isEqualToString:@""]) {
+                success_alert1 = [[SCLAlertView alloc] initWithNewWindowWidth:250];
+                success_alert1.showAnimationType = SCLAlertViewShowAnimationFadeIn;
+                [success_alert1 showWaiting:@"" subTitle:@"Verifying Challan ID" closeButtonTitle:nil duration:0.0];
+                [self performSelector:@selector(challan_tracking) withObject:self afterDelay:1];
+            }
+        }];
+        
+        SCLButton *button =[alert addButton:@"Cancel" actionBlock:^{
+            //
+        }];
+        
+        [alert showEdit:self title:@"Challan Tracking" subTitle:@"Enter Challan ID" closeButtonTitle:nil duration:0.0f];
+    }
 }
 
 -(void)challan_tracking{
+    
     NSString *urlStr = [NSString stringWithFormat:@"http://103.240.220.76/kptraffic/challan/get_challan_info?TicketId=%@", textField1.text];
     NSData *UrlData = [[NSData alloc] initWithContentsOfURL:
                        [NSURL URLWithString:urlStr]];

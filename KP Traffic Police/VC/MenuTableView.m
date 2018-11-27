@@ -8,6 +8,7 @@
 
 #import "MenuTableView.h"
 #import "LoginVC.h"
+#import "SWRevealViewController.h"
 
 @interface MenuTableView ()
 
@@ -53,11 +54,11 @@
     if (indexPath.row == 4) {
         [[NSUserDefaults standardUserDefaults] setBool:NO forKey:@"login_status"];
         LoginVC *vc = [self.storyboard instantiateViewControllerWithIdentifier:@"LoginVC"];
-        [self.navigationController pushViewController:vc animated:YES];
+        [self.revealViewController pushFrontViewController:vc animated:YES];
     }
     else if (indexPath.row == 3){
-//        NSString *weblink = @"";
-//        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:weblink]];
+        NSString *weblink = @"http://www.ptpkp.gov.pk/";
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:weblink]];
     }
 }
 @end

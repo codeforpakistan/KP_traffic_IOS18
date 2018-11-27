@@ -11,8 +11,11 @@
 #import "SCLAlertView.h"
 #import <AVFoundation/AVFoundation.h>
 #import <MobileCoreServices/MobileCoreServices.h>
+#import <AFNetworking.h>
+@import Firebase;
+#import "Reachability.h"
 
-@interface ComplaintsVC ()
+@interface ComplaintsVC ()<NIDropDownDelegate>
 
 @end
 
@@ -23,10 +26,17 @@
     CLLocationManager *locationManager;
     NSString *latitude, *longitude;
     BOOL check;
+    SCLAlertView *waiting_alert;
+    NSURL *filePath1;
+    NSData *videoData;
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    
+    self.title = @"Complaint";
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
     
     imagePciker = [[UIImagePickerController alloc]init];
     imagePciker.delegate = self;
@@ -34,6 +44,12 @@
     _removeImgBtn.hidden = YES;
     _removeVideoBtn.hidden = YES;
     
+    self.sendBtn.layer.cornerRadius = 5;
+    
+    [self performSelector:@selector(userLocation) withObject:self afterDelay:1];
+}
+
+-(void)userLocation{
     //location
     if (locationManager == nil)
     {
@@ -75,6 +91,23 @@
         [dropDown hideDropDown:sender];
         [self rel];
     }
+    [[NSUserDefaults standardUserDefaults] setObject:@"category" forKey:@"issue"];
+}
+
+- (IBAction)districtBtn:(id)sender {
+    NSArray * arr = [[NSArray alloc] init];
+    arr = [NSArray arrayWithObjects:@"Abbottabad", @"Bajaur", @"Bannu", @"Batagram", @"Buner", @"Charsadda", @"Chitral", @"Dera Ismail Khan", @"Hangu", @"Haripur", @"Karak", @"Khyber", @"Kohat", @"Kohistan", @"Kurram", @"Lakki Marwat", @"Lower Dir", @"Lower Kohistan", @"Mansehra", @"Mardan", @"Mohmand", @"North Waziristan", @"Nowshera", @"Orakzai", @"Peshawar", @"Shangla", @"South Waziristan", @"Swabi", @"Swat", @"Tank", @"Tor Ghar", @"Upper Dir", nil];
+    NSArray * arrImage = [[NSArray alloc] init];
+    if(dropDown == nil) {
+        CGFloat f = 200;
+        dropDown = [[NIDropDown alloc] showDropDown:self.view.frame.size.width :sender :&f :arr :arrImage :@"down"];
+        dropDown.delegate = self;
+    }
+    else {
+        [dropDown hideDropDown:sender];
+        [self rel];
+    }
+    [[NSUserDefaults standardUserDefaults] setObject:@"district" forKey:@"issue"];
 }
 
 - (void) niDropDownDelegateMethod: (NIDropDown *) sender {
@@ -88,7 +121,7 @@
 
 - (IBAction)takePicture:(id)sender {
     
-    check = false;
+    check = NO;
     if (_vidImgView.image != nil) {
         SCLAlertView *warning = [[SCLAlertView alloc] initWithNewWindowWidth:250];
         warning.showAnimationType = SCLAlertViewShowAnimationFadeIn;
@@ -121,7 +154,7 @@
 }
 
 - (IBAction)takeVideo:(id)sender {
-    check = true;
+    check = YES;
     if (_imgView.image != nil) {
         SCLAlertView *warning = [[SCLAlertView alloc] initWithNewWindowWidth:250];
         warning.showAnimationType = SCLAlertViewShowAnimationFadeIn;
@@ -174,7 +207,6 @@
     if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary])
     {
         imagePciker.sourceType =  UIImagePickerControllerSourceTypePhotoLibrary;
-        imagePciker.delegate = self;
         imagePciker.allowsEditing = YES;
         imagePciker.videoQuality = UIImagePickerControllerQualityTypeMedium;
         imagePciker.videoMaximumDuration = 60.0f; // 30 seconds
@@ -186,19 +218,17 @@
 -(void)cameraVideo{
     if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera])
     {
-        imagePciker.sourceType =  UIImagePickerControllerSourceTypeCamera;
-        imagePciker.delegate = self;
         imagePciker.allowsEditing = YES;
-        imagePciker.videoQuality = UIImagePickerControllerQualityTypeMedium;
-        imagePciker.videoMaximumDuration = 60.0f; // 30 seconds
-        imagePciker.mediaTypes = [NSArray arrayWithObject:@"public.movie"];
+        imagePciker.sourceType = UIImagePickerControllerSourceTypeCamera;
+        imagePciker.mediaTypes = [[NSArray alloc] initWithObjects: (NSString *) kUTTypeMovie, nil];
         [self presentViewController:imagePciker animated:YES completion:nil];
     }
 }
 
 -(void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *,id> *)info{
     
-    if (check == false) {
+    filePath1 = [info valueForKey:UIImagePickerControllerImageURL];
+    if (check == NO) {
         _removeImgBtn.hidden = NO;
         image = [info objectForKey:@"UIImagePickerControllerOriginalImage"];
         _imgView.image = image;
@@ -206,11 +236,12 @@
         _label1.text = @"Replace Picture";
         _label1.textColor = [UIColor redColor];
     }
-    else if (check == true){
+    else if (check == YES){
         _removeVideoBtn.hidden = NO;
         //video
         NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
-        NSData *videoData = [NSData dataWithContentsOfURL:videoURL];
+        NSLog(@"%@", videoURL);
+        videoData = [NSData dataWithContentsOfURL:videoURL];
         
         //image
         AVURLAsset* asset = [AVURLAsset URLAssetWithURL:videoURL options:nil];
@@ -221,9 +252,57 @@
         
         _label2.text = @"Replace Video";
         _label2.textColor = [UIColor redColor];
+        
+//        NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
+//        NSLog(@"%lu", [[NSData dataWithContentsOfURL:videoURL] length]);
+//
+//        NSLog(@"%lu", [[NSData dataWithContentsOfURL:videoURL] length]);
+//        NSString *outputPath = [self outputFilePath];
+//        NSURL *outputURL = [NSURL fileURLWithPath:outputPath];
+//        [self convertVideoToLowQuailtyWithInputURL:videoURL outputURL:outputURL handler:^(AVAssetExportSession *exportSession)
+//         {
+//             if (exportSession.status == AVAssetExportSessionStatusCompleted)
+//             {
+//                 videoData = [NSData dataWithContentsOfURL:outputURL];
+//                 NSLog(@"%lu", [videoData length]);
+//             }
+//         }];
+        
     }
     [self dismissViewControllerAnimated:YES completion:nil];
 }
+
+//- (NSString *)outputFilePath{
+//    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+//    NSString *documentsDirectory = [paths objectAtIndex:0];
+//    NSString *path = [documentsDirectory stringByAppendingPathComponent:@"compressed"];
+//    NSFileManager *fileManager = [NSFileManager defaultManager];
+//    //    return path;
+//    if ([fileManager fileExistsAtPath: path])
+//    {
+//        [fileManager removeItemAtPath:path error:nil];
+//    }
+//    path = [documentsDirectory stringByAppendingPathComponent: [NSString stringWithFormat: @"compressed"] ];
+//    NSLog(@"path is== %@", path);
+//    return path;
+//}
+//
+//- (void)convertVideoToLowQuailtyWithInputURL:(NSURL*)inputURL
+//                                   outputURL:(NSURL*)outputURL
+//                                     handler:(void (^)(AVAssetExportSession*))handler
+//{
+//
+//    [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
+//    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:inputURL options:nil];
+//    AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetLowQuality];
+//    //    exportSession.fileLengthLimit = 30*1024;
+//    exportSession.outputURL = outputURL;
+//    exportSession.outputFileType = AVFileTypeQuickTimeMovie;
+//    [exportSession exportAsynchronouslyWithCompletionHandler:^(void)
+//     {
+//         handler(exportSession);
+//     }];
+//}
 
 - (IBAction)remove_image:(id)sender {
     _imgView.image = nil;
@@ -242,49 +321,142 @@
 }
 
 - (IBAction)submit_complaint:(id)sender {
+    
+    Reachability *access = [Reachability reachabilityWithHostname:@"www.google.com"];
+    NetworkStatus status = [access currentReachabilityStatus];
+    if (!status) {
+        SCLAlertView *alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        [alert showWarning:self title:@"No internet connection." subTitle:@"Please check your internet connection and try again." closeButtonTitle:@"OK" duration:0.0f];
+    }
+    else{
+        NSArray *user_data = [[NSUserDefaults standardUserDefaults] objectForKey:@"user_data"];
+        NSString *signup_id = [[user_data objectAtIndex:0] objectForKey:@"signup_id"];
+        NSInteger type_id = [[NSUserDefaults standardUserDefaults] integerForKey:@"complaint_type"];
+        NSString *district = _district_btn.titleLabel.text;
+        NSLog(@"%@, %li", signup_id, (long)type_id);
+        
+        if ([_descriptionTF.text isEqualToString:@""] || [district isEqualToString:@"District"]) {
+            SCLAlertView *warning = [[SCLAlertView alloc] initWithNewWindowWidth:250];
+            warning.showAnimationType = SCLAlertViewShowAnimationFadeIn;
+            [warning showWarning:@"" subTitle:@"Fill all fields" closeButtonTitle:@"Ok" duration:0.0];
+        }
+        else{
+            waiting_alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+            waiting_alert.showAnimationType = SCLAlertViewShowAnimationFadeIn;
+            [waiting_alert showWaiting:@"" subTitle:@"Submitting Complaint Detail...." closeButtonTitle:nil duration:0.0];
+            [self performSelector:@selector(complaint) withObject:self afterDelay:1];
+        }
+    }
+    
+    //analytic
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 2],
+                                     kFIRParameterItemName:@"Complaint send button"
+                                     }];
+}
+
+-(void)complaint{
     NSArray *user_data = [[NSUserDefaults standardUserDefaults] objectForKey:@"user_data"];
     NSString *signup_id = [[user_data objectAtIndex:0] objectForKey:@"signup_id"];
-    NSInteger type_id = [[NSUserDefaults standardUserDefaults] integerForKey:@"complaint_type"];
-    NSLog(@"%@, %li", signup_id, (long)type_id);
+    NSInteger type_id = [[NSUserDefaults standardUserDefaults] integerForKey:@"ddcomplaint_type"];
+    NSString *type_id1 = [NSString stringWithFormat:@"%ld", (long)type_id];
+    NSString *district = _district_btn.titleLabel.text;
     
-    //date
-    NSDate *date = [NSDate date];
-    NSDateFormatter *format = [[NSDateFormatter alloc] init];
-    [format setDateFormat:@"yyyy-MM-dd"];
-    NSString *dateString = [format stringFromDate:date];
-    NSLog(@"My date is = %@", dateString);
-    
-    
-    //image upload
-    NSData *imageData = UIImagePNGRepresentation(_imgView.image);
-    NSString *postLength = [NSString stringWithFormat:@"%d", (int)[imageData length]];
-    NSString *imgStr = [imageData base64EncodedStringWithOptions:0];
+    NSDictionary *parameters = @{@"complaint_type_id": type_id1, @"signup_id": signup_id, @"latitude": latitude, @"longitude": longitude, @"description": _descriptionTF.text, @"district": district};
 
-
-    NSString *rawString = [NSString stringWithFormat:@"complaint_type_id=%ld&signup_id=%li&latitude=%@&longitude=%@&description=%@&image=%@&phone=%@", type_id, (long)[signup_id integerValue],latitude, longitude, _descriptionTF.text, imgStr, @"122378"];
-    NSLog(@"%@", rawString);
-    NSData *data1 = [rawString dataUsingEncoding:NSUTF8StringEncoding];
+    NSURL *theURL;
+    if (check == YES) {
+        theURL = [NSURL URLWithString:@"http://103.240.220.76/kptraffic/Complaints/video"];
+    }
+    else if (check == NO){
+        theURL = [NSURL URLWithString:@"http://103.240.220.76/kptraffic/Complaints/image"];
+    }
     
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:theURL];
     [request setHTTPMethod:@"POST"];
-    [request setURL:[NSURL URLWithString:@"http://103.240.220.76/kptraffic/Complaints/image"]];
-    [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:postLength forHTTPHeaderField:@"Content-Length"];
-    [request setHTTPBody:data1];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    NSString *boundary = @"qqqq___winter_is_coming_!___qqqq";
+    NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary];
+    [request setValue:contentType forHTTPHeaderField: @"Content-Type"];
+    NSMutableData *body = [NSMutableData data];
     
-    NSURLSession *session = [NSURLSession sharedSession];
-    NSURLSessionDataTask *task = [session dataTaskWithRequest:request
-    completionHandler: ^(NSData *data, NSURLResponse *response, NSError *error)
-            {
-            NSURLResponse *response1;
-            NSError *err;
-            NSData *responseData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response1 error:&err];
-            NSDictionary* json = [NSJSONSerialization JSONObjectWithData:responseData options:kNilOptions error:&err];
+    for (NSString *key in parameters) {
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"%@\r\n", [parameters objectForKey:key]] dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    
+    NSData *imageData = UIImageJPEGRepresentation(image, 1.0);
 
-                            NSLog(@"%@", json);
-                                }];
-    [task resume];
+    NSDate *date = [NSDate date];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"EEE, d MMM yyyy HH:mm:ss z"];
+    NSString *dateString = [dateFormatter stringFromDate:date];
+    NSString *fileNameStr = [NSString stringWithFormat:@"%@.jpg", dateString];
+    
+    if (check == true) {
+        //video
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"video\"; filename=\"%@.mov\"\r\n", fileNameStr] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[@"Content-Type: video/mov\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:videoData];
+        [body appendData:[[NSString stringWithFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+            
+    }
+    
+    if (check == NO){
+        //image
+        [body appendData:[[NSString stringWithFormat:@"--%@\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"image\"; filename=\"%@\"\r\n", fileNameStr] dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:[@"Content-Type: image/jpeg\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+        [body appendData:imageData];
+        [body appendData:[[NSString stringWithFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    
+    [body appendData:[[NSString stringWithFormat:@"--%@--\r\n", boundary] dataUsingEncoding:NSUTF8StringEncoding]];
+    [request setHTTPBody:body];
+
+    
+    NSURLResponse *response;
+    NSError *err;
+    NSData *responseData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&err];
+    NSDictionary *json = [NSJSONSerialization JSONObjectWithData:responseData options:kNilOptions error:&err];
+    NSString *message = [json objectForKey:@"message"];
+    NSLog(@"%@", message);
+    if ([message isEqualToString:@"Complaint is done!"]) {
+        [waiting_alert hideView];
+        SCLAlertView *sucess_alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+        [sucess_alert showSuccess:@"Success" subTitle:@"Complaint is successfully submitted." closeButtonTitle:@"Ok" duration:0.0f];
+        [sucess_alert alertIsDismissed:^(void){
+                    _descriptionTF.text = nil;
+            
+                    _imgView.image = nil;
+                    _removeImgBtn.hidden = YES;
+                    _label1.text = @"Take Picture";
+                   _label1.textColor = [UIColor grayColor];
+            
+                _vidImgView.image = nil;
+                _removeVideoBtn.hidden = YES;
+                _label2.text = @"Take Video";
+                _label2.textColor = [UIColor grayColor];
+                        //
+
+            [_complaintBtn setTitle:@"Complaints Type" forState:UIControlStateNormal];
+            [_district_btn setTitle:@"District" forState:UIControlStateNormal];
+            [_complaintBtn setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+            [_district_btn setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+
+                    }];
+                }
+                else{
+                    [waiting_alert hideView];
+                    SCLAlertView *error_alert = [[SCLAlertView alloc] initWithNewWindowWidth:self.view.frame.size.width-50];
+                    [error_alert showError:self title:@"Error" subTitle:@"Something went wrong"
+                    closeButtonTitle:@"OK" duration:0.0f];
+        }
 }
+
 
 - (IBAction)backBtn:(id)sender {
     [self.navigationController popViewControllerAnimated:YES];

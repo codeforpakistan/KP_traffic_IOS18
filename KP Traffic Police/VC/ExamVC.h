@@ -24,4 +24,5 @@
 //database...
 @property (nonatomic, strong) DBManager *dbManager;
 @property (nonatomic, strong) NSArray *data_array;
+@property (strong, nonatomic) IBOutlet UILabel *question_no_lbl;
 @end

@@ -28,6 +28,8 @@
 @synthesize animationDirection;
 
 - (id)showDropDown:(float)width :(UIButton *)b :(CGFloat *)height :(NSArray *)arr :(NSArray *)imgArr :(NSString *)direction {
+    
+    
     btnSender = b;
     animationDirection = direction;
     self.table = (UITableView *)[super init];
@@ -137,7 +139,15 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self hideDropDown:btnSender];
     
-    [[NSUserDefaults standardUserDefaults] setInteger:indexPath.row forKey:@"complaint_type"];
+    //btn background color.
+    UIButton *btn = (UIButton*)btnSender;
+    [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    
+    NSString *str = [[NSUserDefaults standardUserDefaults] objectForKey:@"issue"];
+    if ([str isEqualToString:@"category"]) {
+        [[NSUserDefaults standardUserDefaults] setInteger:indexPath.row+1 forKey:@"ddcomplaint_type"];
+        NSLog(@"%ld", indexPath.row+1);
+    }
     
     UITableViewCell *c = [tableView cellForRowAtIndexPath:indexPath];
     [btnSender setTitle:c.textLabel.text forState:UIControlStateNormal];

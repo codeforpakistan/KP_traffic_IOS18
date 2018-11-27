@@ -7,6 +7,7 @@
 //
 
 #import "LicenseVC.h"
+@import Firebase;
 
 @interface LicenseVC ()
 
@@ -18,6 +19,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.title = @"License";
+    self.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor]};
     
     _tableView.delegate = self;
     _tableView.dataSource = self;
@@ -31,6 +35,13 @@
 //    _bgView.layer.shadowOffset = CGSizeMake(1.0, 1.0);
 //    _bgView.layer.shadowOpacity = 1;
 //    _bgView.layer.shadowRadius = 1.0;
+    
+    //analytic
+    [FIRAnalytics logEventWithName:kFIREventSelectContent
+                        parameters:@{
+                                     kFIRParameterItemID:[NSString stringWithFormat:@"%i", 4],
+                                     kFIRParameterItemName:@"License Status Checked"
+                                     }];
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
